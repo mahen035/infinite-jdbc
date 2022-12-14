@@ -14,21 +14,43 @@ public class JdbcDemo {
         String password = "pass123";
         Connection con = null;
 
+        /*
+            CREATE DEFINER=`root`@`localhost` PROCEDURE `get_prod`(in id int, out pr_name varchar(1000), out pr_desc varchar(1000))
+            BEGIN
+                 select prod_name, prod_desc into pr_name, pr_desc from product where prod_id = id;
+            END
+         */
+
         try{
              con = DriverManager.getConnection(url, user, password);
              System.out.println("Enter product id you want to search:");
              int id = sc.nextInt();
 
-             String sql = "{ call get_products(?) }";
+             //String sql = "{ call get_products(?) }";
+             String sql = "{ call get_prod(?,?,?) }";
+
+
             //Statement stmt = con.createStatement();  // Statement is used for static queries
 
            // PreparedStatement stmt = con.prepareStatement("select * from product where prod_id = ?"); // Prepared statement is used for dynamic queries
 
             CallableStatement stmt = con.prepareCall(sql);
 
-            stmt.setDouble(1, 100);
+            stmt.setInt(1, id);
 
-            ResultSet rs = stmt.executeQuery();
+            stmt.registerOutParameter(2, Types.VARCHAR);
+
+            stmt.registerOutParameter(3, Types.VARCHAR);
+
+            stmt.executeQuery();
+
+            String productName = stmt.getString(2);
+
+            String productDesc = stmt.getString(3);
+
+            System.out.println("Product Name: "+productName+" Product Description: "+productDesc);
+
+            /*
             List<Product> productList = new ArrayList<Product>();
             while(rs.next()){
                 Product product = new Product();
@@ -44,7 +66,7 @@ public class JdbcDemo {
             for(Product pr : productList){
                 System.out.println(pr.getProdDesc()+"::"+pr.getPrice());
             }
-
+            */
         }
         catch (Exception e){
             e.printStackTrace();
