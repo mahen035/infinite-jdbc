@@ -19,6 +19,16 @@ public class JdbcDemo {
             BEGIN
                  select prod_name, prod_desc into pr_name, pr_desc from product where prod_id = id;
             END
+
+
+            CREATE DEFINER=`root`@`localhost` FUNCTION `get_price`(id int) RETURNS decimal(10,0)
+            DETERMINISTIC
+            BEGIN
+	             declare pr_price decimal;
+                 select price into pr_price from product where prod_id = id;
+                RETURN pr_price;
+            END
+
          */
 
         try{
@@ -27,28 +37,22 @@ public class JdbcDemo {
              int id = sc.nextInt();
 
              //String sql = "{ call get_products(?) }";
-             String sql = "{ call get_prod(?,?,?) }";
-
-
+             //String sql = "{ call get_prod(?,?,?) }";
+               String sql = "{ ? = call get_price(?) }";
             //Statement stmt = con.createStatement();  // Statement is used for static queries
 
            // PreparedStatement stmt = con.prepareStatement("select * from product where prod_id = ?"); // Prepared statement is used for dynamic queries
 
             CallableStatement stmt = con.prepareCall(sql);
+            stmt.registerOutParameter(1, Types.DECIMAL);
 
-            stmt.setInt(1, id);
-
-            stmt.registerOutParameter(2, Types.VARCHAR);
-
-            stmt.registerOutParameter(3, Types.VARCHAR);
-
-            stmt.executeQuery();
-
-            String productName = stmt.getString(2);
-
-            String productDesc = stmt.getString(3);
-
-            System.out.println("Product Name: "+productName+" Product Description: "+productDesc);
+           stmt.setInt(2, id);
+            //stmt.registerOutParameter(2, Types.VARCHAR);
+            //stmt.registerOutParameter(3, Types.VARCHAR);
+            stmt.execute();
+            double price = stmt.getDouble(1);
+           // String productDesc = stmt.getString(3);
+            System.out.println("Product Price : "+price);
 
             /*
             List<Product> productList = new ArrayList<Product>();
